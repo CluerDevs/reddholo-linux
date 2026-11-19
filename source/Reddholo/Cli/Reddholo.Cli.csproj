@@ -4,6 +4,8 @@
 		<OutputType>Exe</OutputType>
 		<AssemblyName>reddholo-cli</AssemblyName>
 		<RootNamespace>Reddholo.Cli</RootNamespace>
+		<!-- Runs on minimal servers without libicu; output is invariant-culture anyway. -->
+		<InvariantGlobalization>true</InvariantGlobalization>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Core\Reddholo.Core.csproj" />
