@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using BcuHolo.Plugins;
 
 namespace BcuHolo.Modules.Sensors
@@ -40,10 +41,14 @@ namespace BcuHolo.Modules.Sensors
         {
             var dir = Path.Combine(_root, "sys/class/hwmon");
             if (!Directory.Exists(dir)) return; // e.g. WSL, containers
-            foreach (var hw in Directory.EnumerateDirectories(dir).OrderBy(d => d, StringComparer.Ordinal))
+            var seen = new Dictionary<string, int>();
+            foreach (var hw in Directory.EnumerateDirectories(dir).OrderBy(Natural, StringComparer.Ordinal))
             {
                 string group = Text(Path.Combine(hw, "name")) ?? Path.GetFileName(hw);
-                foreach (var file in Directory.EnumerateFiles(hw).OrderBy(f => f, StringComparer.Ordinal))
+                // Dual-socket boards expose two "coretemp" devices with the same core labels: keep them apart.
+                seen[group] = seen.TryGetValue(group, out var n) ? n + 1 : 1;
+                if (seen[group] > 1) group += " #" + seen[group];
+                foreach (var file in Directory.EnumerateFiles(hw).OrderBy(Natural, StringComparer.Ordinal))
                 {
                     var fn = Path.GetFileName(file);
                     // power sensors expose *_average on some drivers instead of *_input
@@ -88,6 +93,9 @@ namespace BcuHolo.Modules.Sensors
             into.Add(new SensorReading(Name, "Memory", "Memory", (total - avail) / total * 100, "%"));
             into.Add(new SensorReading(Name, "Memory", "Memory Used", (total - avail) / 1048576, "GB"));
         }
+
+        // "temp2" before "temp10", "hwmon2" before "hwmon10".
+        private static string Natural(string path) => Regex.Replace(path, @"\d+", m => m.Value.PadLeft(6, '0'));
 
         private static string Text(string path)
         {
