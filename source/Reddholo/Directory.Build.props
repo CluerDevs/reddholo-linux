@@ -1,0 +1,12 @@
+<Project>
+	<!-- Cross-platform projects (Windows, Linux, later macOS). Deliberately does NOT import ..\Directory.Build.props:
+	     that one targets net8.0-windows, WinForms and the admin manifest. -->
+	<PropertyGroup>
+		<Version>6.3</Version>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>disable</Nullable>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Deterministic>true</Deterministic>
+		<DebugType>embedded</DebugType>
+	</PropertyGroup>
+</Project>

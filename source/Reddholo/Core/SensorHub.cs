@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Windows;
-using System.Windows.Threading;
 using BcuHolo.Plugins;
 
 namespace BcuHolo.Modules.Sensors
@@ -19,13 +17,16 @@ namespace BcuHolo.Modules.Sensors
 
     /// <summary>
     /// Owns every ISensorSource. Polls once a second on a background thread only while someone is subscribed.
-    /// Plugins add sources with AddSource. Updated is raised on the UI dispatcher.
+    /// Plugins and the platform shell add sources with AddSource. Handlers run via <see cref="Post"/>
+    /// (the WPF app sets it to its dispatcher; otherwise they run on the polling thread).
     /// </summary>
     public static class SensorHub
     {
         private const int HistoryLen = 60;
         private static readonly object Gate = new object();
-        private static readonly List<ISensorSource> Sources = new List<ISensorSource> { new LhmSensorSource() };
+        private static readonly List<ISensorSource> Sources = OperatingSystem.IsLinux()
+            ? new List<ISensorSource> { new LinuxSensorSource() }
+            : new List<ISensorSource>(); // Windows: the app adds LibreHardwareMonitor at startup
         private static readonly Dictionary<(string, string, string, string), (double min, double max, Queue<double> hist)> Stats = new();
         private static IReadOnlyList<SensorEntry> _snapshot = new SensorEntry[0];
         private static Action _handlers;
@@ -35,6 +36,9 @@ namespace BcuHolo.Modules.Sensors
         private static readonly object PollGate = new object(); // a restarted loop must not overlap a lingering old poll
 
         public static void AddSource(ISensorSource source) { lock (Gate) Sources.Add(source); }
+
+        /// <summary>Runs a notification on the UI thread. Null: handlers run on the polling thread.</summary>
+        public static Action<Action> Post;
 
         public static IReadOnlyList<SensorEntry> Snapshot => _snapshot;
 
@@ -137,13 +141,13 @@ namespace BcuHolo.Modules.Sensors
 
             // Coalesce: skip if the UI hasn't handled the previous notification yet.
             if (Interlocked.Exchange(ref _notifyPending, 1) == 1) return;
-            var d = Application.Current?.Dispatcher;
-            if (d == null) { _notifyPending = 0; return; }
-            d.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+            Action notify = () =>
             {
                 _notifyPending = 0;
                 try { _handlers?.Invoke(); } catch (Exception ex) { Trace.WriteLine("SensorHub handler: " + ex.Message); }
-            }));
+            };
+            var post = Post;
+            if (post == null) notify(); else post(notify);
         }
     }
 }

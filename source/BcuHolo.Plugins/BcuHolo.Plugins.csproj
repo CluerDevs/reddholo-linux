@@ -7,4 +7,8 @@
 		<Nullable>disable</Nullable>
 		<ApplicationManifest />
 	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Reddholo\Core\Reddholo.Core.csproj" />
+	</ItemGroup>
 </Project>

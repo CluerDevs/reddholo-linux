@@ -21,5 +21,6 @@
 		<ProjectReference Include="..\UninstallTools\UninstallTools.csproj" />
 		<ProjectReference Include="..\KlocTools\KlocTools.csproj" />
 		<ProjectReference Include="..\BcuHolo.Plugins\BcuHolo.Plugins.csproj" />
+		<ProjectReference Include="..\Reddholo\Core\Reddholo.Core.csproj" />
 	</ItemGroup>
 </Project>

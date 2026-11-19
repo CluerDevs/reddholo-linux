@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!-- Headless reddholo: prints this machine's sensors. Seed of the fleet agent's local read-out. -->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<AssemblyName>reddholo-cli</AssemblyName>
+		<RootNamespace>Reddholo.Cli</RootNamespace>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Core\Reddholo.Core.csproj" />
+	</ItemGroup>
+</Project>

@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!-- Platform-neutral reddholo code: sensor contracts, the sensor hub, NVML, Linux hwmon. No UI, no Windows APIs. -->
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<RootNamespace>Reddholo.Core</RootNamespace>
+	</PropertyGroup>
+</Project>

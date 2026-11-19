@@ -61,6 +61,9 @@ namespace BcuHolo
 
             // The main window and the widget each keep the app alive; it exits when neither is showing.
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            // Before MainWindow: LHM stays first in the list, ahead of any plugin sources.
+            BcuHolo.Modules.Sensors.SensorHub.AddSource(new BcuHolo.Modules.Sensors.LhmSensorSource());
+            BcuHolo.Modules.Sensors.SensorHub.Post = a => Dispatcher.BeginInvoke(DispatcherPriority.Background, a);
             Exit += (_, _) => BcuHolo.Modules.Sensors.SensorHub.Shutdown(); // release the sensor driver cleanly
             var main = new MainWindow(); // always built: it owns the modules (GPU engine, sensors) the widget reads
             MainWindow = main;

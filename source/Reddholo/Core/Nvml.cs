@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace BcuHolo.Modules.Gpu
 {
-    internal sealed class NvmlException : Exception
+    public sealed class NvmlException : Exception
     {
         public int Code { get; }
         public NvmlException(string what, int code) : base(Describe(what, code)) { Code = code; }
@@ -13,7 +13,7 @@ namespace BcuHolo.Modules.Gpu
             string hint = code switch
             {
                 3 => "not supported by this GPU/driver",
-                4 => "permission denied (run reddholo as administrator)",
+                4 => OperatingSystem.IsWindows() ? "permission denied (run reddholo as administrator)" : "permission denied (run as root)",
                 9 => "NVIDIA driver is not loaded",
                 15 => "GPU is lost or unreachable",
                 _ => Nvml.ErrorText(code),
@@ -22,11 +22,19 @@ namespace BcuHolo.Modules.Gpu
         }
     }
 
-    /// <summary>Thin P/Invoke layer over nvml.dll (System32 on Windows drivers). Signatures per NVIDIA NVML API reference.</summary>
-    internal static class Nvml
+    /// <summary>Thin P/Invoke layer over NVML: nvml.dll (System32) on Windows, libnvidia-ml.so.1 on Linux. Signatures per NVIDIA NVML API reference.</summary>
+    public static class Nvml
     {
         private const string Dll = "nvml.dll";
         private static bool _inited;
+
+        static Nvml()
+        {
+            // Linux drivers ship the library as libnvidia-ml.so.1 (no unversioned name without the -dev package).
+            if (!OperatingSystem.IsWindows())
+                NativeLibrary.SetDllImportResolver(typeof(Nvml).Assembly, (name, asm, path) =>
+                    name == Dll && NativeLibrary.TryLoad("libnvidia-ml.so.1", asm, path, out var h) ? h : IntPtr.Zero);
+        }
 
         [StructLayout(LayoutKind.Sequential)]
         private struct Utilization { public uint gpu; public uint memory; }
@@ -65,7 +73,7 @@ namespace BcuHolo.Modules.Gpu
 
         private static void Ck(string what, int rc) { if (rc != 0) throw new NvmlException(what, rc); }
 
-        /// <summary>Loads nvml.dll and initialises it. Returns an error string, or null on success.</summary>
+        /// <summary>Loads NVML and initialises it. Returns an error string, or null on success.</summary>
         public static string Init()
         {
             try
@@ -76,8 +84,8 @@ namespace BcuHolo.Modules.Gpu
                 return null;
             }
             catch (DllNotFoundException) { return "NVIDIA driver not found"; }
-            catch (EntryPointNotFoundException) { return "NVIDIA driver not found (nvml.dll is too old)"; }
-            catch (BadImageFormatException) { return "NVIDIA driver not found (nvml.dll architecture mismatch)"; }
+            catch (EntryPointNotFoundException) { return "NVIDIA driver not found (NVML is too old)"; }
+            catch (BadImageFormatException) { return "NVIDIA driver not found (NVML architecture mismatch)"; }
         }
 
         public static void Shutdown()
@@ -118,7 +126,7 @@ namespace BcuHolo.Modules.Gpu
     }
 
     /// <summary>The first NVIDIA GPU. Reads throw <see cref="NvmlException"/>; setters are only called from user-confirmed actions.</summary>
-    internal sealed class GpuDevice
+    public sealed class GpuDevice
     {
         private readonly IntPtr _h;
         public string Name { get; }

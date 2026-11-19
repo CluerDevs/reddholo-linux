@@ -1,5 +1,9 @@
-using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Windows;
+
+// The sensor contracts moved to the cross-platform Reddholo.Core; forwarded so plugins built against this assembly still load.
+[assembly: TypeForwardedTo(typeof(BcuHolo.Plugins.ISensorSource))]
+[assembly: TypeForwardedTo(typeof(BcuHolo.Plugins.SensorReading))]
 
 namespace BcuHolo.Plugins
 {
@@ -35,17 +39,4 @@ namespace BcuHolo.Plugins
         /// <summary>Small text badge next to the module in the rail (e.g. "75 GB"); null clears it.</summary>
         void SetBadge(string moduleId, string text);
     }
-
-    /// <summary>A source of hardware or environment readings (temperatures, loads, a smart plug's watts…).</summary>
-    public interface ISensorSource
-    {
-        string Name { get; }
-
-        /// <summary>Polled about once a second from a background thread; must not block for long.</summary>
-        IEnumerable<SensorReading> Read();
-    }
-
-    /// <param name="Group">e.g. "CPU", "GPU", "Drive C:"</param>
-    /// <param name="Unit">e.g. "°C", "%", "W", "V", "RPM"</param>
-    public sealed record SensorReading(string Source, string Group, string Name, double Value, string Unit);
 }
