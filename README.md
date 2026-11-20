@@ -3,9 +3,9 @@
 The Linux port of **reddholo**, a hardware monitor and PC clean-up tool. It is being moved off Windows-only code
 one piece at a time.
 
-> **Status: early preview.** Released: `reddholo-cli`, a command-line tool that prints the machine's sensors.
-> In progress: the desktop app (Avalonia), which so far has the GPU and Sensors pages. The full app (dashboard,
-> clean-up) still runs on Windows only. Get that from [CluerDevs/reddholo](https://github.com/CluerDevs/reddholo).
+> **Status: preview.** Released: `reddholo-cli`, a command-line tool that prints the machine's sensors.
+> The desktop app (Avalonia) now has every page of the Windows app, rebuilt on Linux sources; run it from source
+> for now. The Windows app stays at [CluerDevs/reddholo](https://github.com/CluerDevs/reddholo).
 
 ## Download and run
 
@@ -64,15 +64,25 @@ dotnet publish source/Reddholo/Cli -c Release -r linux-x64 --self-contained -p:P
 ./out/reddholo-cli
 ```
 
-### Desktop app (in progress)
+### Desktop app
 
 ```sh
 dotnet run --project source/Reddholo/App -c Release
 ```
 
-Today it has the GPU page (dials, power limit, fan curve, live history), the Sensors page and all six colour
-themes. Changing the power limit or fans needs root on Linux; reading works as a normal user. It shares its settings file with the Windows app
-(`~/.local/share/reddholo/settings.json` on Linux).
+| Page | On Linux it uses |
+|---|---|
+| Dashboard | `/proc` for CPU, memory and processes; NVML for the GPU; kernel log for machine-check errors; disk usage |
+| Apps | dpkg/apt, rpm/dnf, flatpak and snap; uninstall runs through `pkexec` after a dry run |
+| Cleanup | trash, caches, thumbnails, apt cache, journal, old snaps, unused flatpak runtimes, core dumps |
+| GPU | NVML: dials, power limit, fan curve, live history |
+| Sensors | hwmon (`coretemp`, `k10temp`, `nvme`, `drivetemp`, …) |
+| Drivers | GPU driver, kernel, BIOS, third-party kernel modules, PCI devices, `fwupd` firmware updates (list only) |
+| Startup | XDG autostart entries and systemd user/system services |
+
+Plus the desktop widget, six colour themes and its own window frame. Anything that changes the system asks
+first; changes outside your home folder (packages, system services, power limit, fan control) need root and go
+through `pkexec`. Settings live in `~/.local/share/reddholo/`, in the same format as the Windows app.
 
 ## Layout
 
@@ -86,10 +96,10 @@ themes. Changing the power limit or fans needs root on Linux; reading works as a
 
 ## Roadmap
 
-1. **Shared core:** sensors and GPU done. Still to come: apps, startup items, clean-up and drivers, each with a
-   Linux version (apt/dnf/flatpak/snap, systemd/autostart, cache and journal clean-up).
-2. **Cross-platform app:** move the screens from WPF to Avalonia, so the same app opens on Windows and Linux.
-   Done: window, rail, themes, Sensors, GPU. Next: Dashboard, desktop widget, custom window frame.
+1. **Shared core:** sensors and GPU done. Apps, startup, clean-up and drivers have Linux versions in the app;
+   their Windows versions still live in the WPF app.
+2. **Cross-platform app:** done on Linux: every page, the widget and the custom frame. Next: plug the Windows
+   sources (LibreHardwareMonitor, the uninstall engine) into the same app so one build serves both.
 3. **Packages:** AppImage for Linux, and a portable zip for Windows.
 4. **Fleet:** watch many machines from one place, over the local network and SSH, with alerts when something is
    out of normal. See [doc/fleet-plan.md](doc/fleet-plan.md).

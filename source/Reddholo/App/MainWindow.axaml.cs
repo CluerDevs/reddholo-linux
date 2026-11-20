@@ -14,7 +14,7 @@ namespace Reddholo.App
         /// <summary>Every page, rail order. The dashboard reads the others' tiles from here.</summary>
         internal static readonly List<IPage> Pages = new List<IPage>
         {
-            new DashboardPage(), new GpuPage(), new SensorsPage(), new DriversPage(), new AppsPage(), new StartupPage(),
+            new DashboardPage(), new GpuPage(), new SensorsPage(), new DriversPage(), new AppsPage(), new StartupPage(), new CleanupPage(),
         }.OrderBy(p => p.Order).ToList();
 
         private readonly Dictionary<string, Control> _views = new Dictionary<string, Control>();
