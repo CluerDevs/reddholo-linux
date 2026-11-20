@@ -254,6 +254,7 @@ namespace Reddholo.App
                 try { tile = p.CreateTile(); }
                 catch (Exception ex) { Trace.WriteLine($"Tile for {p.Id} failed: {ex}"); }
                 if (tile == null) continue;
+                if (!tile.Classes.Contains("card")) tile = Ui.Card(tile); // page returned bare content: give it the glass card
                 if (!tile.Classes.Contains("tile")) tile.Classes.Add("tile");
                 tile.Margin = new Thickness(0, 0, 16, 16);
                 tiles.Children.Add(tile);

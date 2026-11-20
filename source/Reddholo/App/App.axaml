@@ -11,7 +11,7 @@
         <FluentTheme />
 
         <!-- Glass card. BoxShadow is drawn once per layout, unlike WPF's DropShadowEffect, so live numbers stay cheap. -->
-        <Style Selector="Border.card">
+        <Style Selector=":is(Border).card">
             <Setter Property="Background" Value="{DynamicResource GlassFill}" />
             <Setter Property="BorderBrush" Value="{DynamicResource GlassLine}" />
             <Setter Property="BorderThickness" Value="1" />
@@ -21,7 +21,7 @@
         </Style>
 
         <!-- Dashboard tile: a bigger, rounder card. -->
-        <Style Selector="Border.tile">
+        <Style Selector=":is(Border).tile">
             <Setter Property="CornerRadius" Value="22" />
             <Setter Property="Padding" Value="20,18" />
             <Setter Property="MinHeight" Value="230" />
