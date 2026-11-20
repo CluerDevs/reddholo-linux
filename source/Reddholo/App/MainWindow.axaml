@@ -1,0 +1,49 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Reddholo.App.MainWindow"
+        Title="reddholo" Icon="/holo.ico" Width="1280" Height="820" MinWidth="980" MinHeight="620"
+        Background="{DynamicResource Bg}" Foreground="{DynamicResource Text}" FontSize="14"
+        WindowStartupLocation="CenterScreen">
+    <Grid ColumnDefinitions="228,*" RowDefinitions="56,*">
+        <!-- Backdrop glows -->
+        <Canvas Grid.ColumnSpan="2" Grid.RowSpan="2" IsHitTestVisible="False" ClipToBounds="True">
+            <Ellipse Canvas.Right="-260" Canvas.Top="-320" Width="900" Height="700">
+                <Ellipse.Fill><RadialGradientBrush><GradientStop Color="{DynamicResource Accent.2E.C}" Offset="0"/><GradientStop Color="{DynamicResource Accent.00.C}" Offset="1"/></RadialGradientBrush></Ellipse.Fill>
+            </Ellipse>
+            <Ellipse Canvas.Left="-200" Canvas.Bottom="-300" Width="900" Height="760">
+                <Ellipse.Fill><RadialGradientBrush><GradientStop Color="{DynamicResource Violet.24.C}" Offset="0"/><GradientStop Color="{DynamicResource Violet.00.C}" Offset="1"/></RadialGradientBrush></Ellipse.Fill>
+            </Ellipse>
+            <Ellipse Canvas.Left="700" Canvas.Top="380" Width="700" Height="520">
+                <Ellipse.Fill><RadialGradientBrush><GradientStop Color="{DynamicResource Danger.14.C}" Offset="0"/><GradientStop Color="{DynamicResource Danger.00.C}" Offset="1"/></RadialGradientBrush></Ellipse.Fill>
+            </Ellipse>
+        </Canvas>
+
+        <!-- Rail -->
+        <Border Grid.RowSpan="2" Background="{DynamicResource Rail.99}" BorderBrush="{DynamicResource GlassLine}" BorderThickness="0,0,1,0" Padding="14,0,14,20">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10,14,0,24">
+                    <Image Source="/holo.ico" Width="28" Height="28" />
+                    <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="18" FontWeight="Bold">
+                        <Run Text="REDD"/><Run Text="/" Foreground="{DynamicResource Accent}"/><Run Text="HOLO"/>
+                    </TextBlock>
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Bottom" x:Name="NodeLabel" FontFamily="{StaticResource Mono}" FontSize="9" Foreground="{DynamicResource Muted.52}" Margin="8,10,0,0"/>
+                <Border DockPanel.Dock="Bottom" CornerRadius="16" Background="{DynamicResource Good.12}" BorderBrush="{DynamicResource Good.40}" BorderThickness="1" Padding="12,10" Margin="4,12,4,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="8" Height="8" Fill="{DynamicResource Good}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="All local" Foreground="{DynamicResource Good}" FontWeight="SemiBold" FontSize="13"/>
+                        </StackPanel>
+                        <TextBlock Text="No telemetry. Nothing goes online." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource Muted}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Button DockPanel.Dock="Bottom" x:Name="ThemeButton" Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                        Margin="4,12,4,0" ToolTip.Tip="Change the colour theme" Content="Theme"/>
+                <ListBox x:Name="Rail" Classes="rail" ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+            </DockPanel>
+        </Border>
+
+        <TextBlock x:Name="PageTitle" Grid.Column="1" Margin="32,10,0,0" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+        <ContentControl x:Name="PageHost" Grid.Column="1" Grid.Row="1" Margin="32,4,32,0" Focusable="False"/>
+    </Grid>
+</Window>

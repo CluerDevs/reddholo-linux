@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!-- Cross-platform reddholo app (Avalonia). Replaces the WPF shell page by page; see README roadmap step 2. -->
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<AssemblyName>reddholo</AssemblyName>
+		<RootNamespace>Reddholo.App</RootNamespace>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<ApplicationIcon>..\..\BcuHolo\holo.ico</ApplicationIcon>
+	</PropertyGroup>
+	<ItemGroup>
+		<AvaloniaResource Include="..\..\BcuHolo\holo.ico" Link="holo.ico" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="11.3.23" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.3.23" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.23" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.23" />
+		<ProjectReference Include="..\Core\Reddholo.Core.csproj" />
+	</ItemGroup>
+</Project>
