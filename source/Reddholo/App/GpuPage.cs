@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -23,34 +21,6 @@ namespace Reddholo.App
         public string Icon => "M2,6 H20 A2,2 0 0 1 22,8 V16 A2,2 0 0 1 20,18 H4 V20 H2 Z M4,8 V16 H20 V8 Z M12,9 A3,3 0 1 1 12,15 A3,3 0 1 1 12,9 Z";
         public int Order => 35;
         public Control CreateView() => new GpuView(Model);
-
-        /// <summary>Modal yes/no over the main window. Closing the dialog counts as no.</summary>
-        public static async Task<bool> Confirm(string title, string message)
-        {
-            var owner = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
-            if (owner == null) return false;
-            var w = new Window
-            {
-                Title = title, Width = 480, SizeToContent = SizeToContent.Height, CanResize = false,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner, ShowInTaskbar = false,
-            };
-            Ui.Res(w, Window.BackgroundProperty, "Bg");
-            var ok = Ui.Button("Apply", "primary");
-            var cancel = Ui.Button("Cancel", "ghost", new Thickness(8, 0, 0, 0));
-            ok.IsDefault = true; cancel.IsCancel = true;
-            ok.Click += (_, _) => w.Close(true);
-            cancel.Click += (_, _) => w.Close(false);
-            var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 20, 0, 0) };
-            buttons.Children.Add(ok); buttons.Children.Add(cancel);
-            var body = new StackPanel { Margin = new Thickness(24, 20) };
-            body.Children.Add(Ui.Text(title, 18, weight: FontWeight.Bold));
-            var msg = Ui.Text(message, 14, "Muted");
-            msg.Margin = new Thickness(0, 10, 0, 0);
-            body.Children.Add(msg);
-            body.Children.Add(buttons);
-            w.Content = body;
-            return await w.ShowDialog<bool>(owner);
-        }
     }
 
     internal sealed class GpuView : UserControl

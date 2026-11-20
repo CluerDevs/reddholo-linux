@@ -7,38 +7,50 @@ using Avalonia.Media;
 
 namespace Reddholo.App
 {
-    /// <summary>One rail entry. The WPF app's IHoloModule, minus plugins and dashboard tiles (not ported yet).</summary>
-    internal interface IPage
-    {
-        string Id { get; }
-        string Title { get; }
-        /// <summary>SVG path data for the rail icon, drawn in a 24x24 box.</summary>
-        string Icon { get; }
-        int Order { get; }
-        /// <summary>Called once; the window caches the view.</summary>
-        Control CreateView();
-    }
-
     public partial class MainWindow : Window
     {
-        private readonly List<IPage> _pages = new List<IPage> { new GpuPage(), new SensorsPage() };
+        /// <summary>Every page, rail order. The dashboard reads the others' tiles from here.</summary>
+        internal static readonly List<IPage> Pages = new List<IPage>
+        {
+            new DashboardPage(), new GpuPage(), new SensorsPage(),
+        }.OrderBy(p => p.Order).ToList();
+
         private readonly Dictionary<string, Control> _views = new Dictionary<string, Control>();
+        private readonly Dictionary<string, TextBlock> _badges = new Dictionary<string, TextBlock>();
 
         public MainWindow()
         {
             InitializeComponent();
             NodeLabel.Text = "REDD.HOLO · " + Environment.MachineName.ToUpperInvariant();
 
-            foreach (var p in _pages.OrderBy(p => p.Order))
+            foreach (var p in Pages)
             {
                 var icon = new PathIcon { Data = Geometry.Parse(p.Icon), Width = 16, Height = 16, Margin = new Avalonia.Thickness(0, 0, 12, 0) };
-                var row = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+                var badge = Ui.Text("", 11, "Muted", mono: true);
+                badge.VerticalAlignment = VerticalAlignment.Center;
+                badge.IsVisible = false;
+                _badges[p.Id] = badge;
+                var row = new DockPanel { VerticalAlignment = VerticalAlignment.Center };
+                DockPanel.SetDock(badge, Dock.Right);
+                row.Children.Add(badge);
                 row.Children.Add(icon);
                 row.Children.Add(new TextBlock { Text = p.Title, VerticalAlignment = VerticalAlignment.Center });
-                Rail.Items.Add(new ListBoxItem { Content = row, Tag = p, VerticalContentAlignment = VerticalAlignment.Center });
+                Rail.Items.Add(new ListBoxItem { Content = row, Tag = p, VerticalContentAlignment = VerticalAlignment.Center, HorizontalContentAlignment = HorizontalAlignment.Stretch });
             }
             Rail.SelectionChanged += (_, _) => { if (Rail.SelectedItem is ListBoxItem { Tag: IPage p }) Show(p); };
             Rail.SelectedIndex = 0;
+
+            Shell.Navigate = id =>
+            {
+                var item = Rail.Items.OfType<ListBoxItem>().FirstOrDefault(i => ((IPage)i.Tag).Id == id);
+                if (item != null) Rail.SelectedItem = item;
+            };
+            Shell.SetBadge = (id, text) =>
+            {
+                if (!_badges.TryGetValue(id, out var b)) return;
+                b.Text = text ?? "";
+                b.IsVisible = !string.IsNullOrEmpty(text);
+            };
 
             var menu = new MenuFlyout();
             foreach (var t in BcuHolo.Themes.Theme.All) // qualified: Window.Theme is a property
