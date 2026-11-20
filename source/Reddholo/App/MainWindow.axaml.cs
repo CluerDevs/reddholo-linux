@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 
@@ -60,6 +62,58 @@ namespace Reddholo.App
                 menu.Items.Add(item);
             }
             ThemeButton.Flyout = menu;
+            SetUpFrame();
+        }
+
+        private void SetUpFrame()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                // Keeps native resize borders, Snap and the DWM shadow; we draw the caption.
+                ExtendClientAreaToDecorationsHint = true;
+                ExtendClientAreaChromeHints = Avalonia.Platform.ExtendClientAreaChromeHints.NoChrome;
+                ExtendClientAreaTitleBarHeightHint = -1;
+            }
+            else
+            {
+                // X11/Wayland WMs don't support an extended client area reliably: no decorations, our own grips.
+                SystemDecorations = SystemDecorations.None;
+                TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
+                foreach (var g in Grips.Children.OfType<Border>())
+                {
+                    var edge = Enum.Parse<WindowEdge>((string)g.Tag);
+                    g.PointerPressed += (_, e) => { if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) BeginResizeDrag(edge, e); };
+                }
+            }
+
+            void Drag(object sender, PointerPressedEventArgs e)
+            {
+                if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+                if (e.ClickCount == 2) ToggleMax(); else BeginMoveDrag(e);
+            }
+            CaptionDrag.PointerPressed += Drag;
+            Logo.PointerPressed += Drag;
+            MinButton.Click += (_, _) => WindowState = WindowState.Minimized;
+            MaxButton.Click += (_, _) => ToggleMax();
+            CloseButton.Click += (_, _) => Close();
+            WidgetButton.IsVisible = false; // shown once the widget is wired in
+
+            PropertyChanged += (_, e) => { if (e.Property == WindowStateProperty || e.Property == ActualTransparencyLevelProperty) UpdateFrame(); };
+            Opened += (_, _) => UpdateFrame();
+        }
+
+        private void ToggleMax() => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+        private void UpdateFrame()
+        {
+            bool max = WindowState == WindowState.Maximized;
+            MaxGlyph.Data = Geometry.Parse(max ? "M2.5,0.5 H9.5 V7.5 M0.5,2.5 H7.5 V9.5 H0.5 Z" : "M0.5,0.5 H9.5 V9.5 H0.5 Z");
+            ToolTip.SetTip(MaxButton, max ? "Restore" : "Maximize");
+            Grips.IsVisible = !OperatingSystem.IsWindows() && !max;
+            // Rounded corners and a hairline need a compositing WM; without one the corners would show black.
+            bool round = !OperatingSystem.IsWindows() && !max && ActualTransparencyLevel == WindowTransparencyLevel.Transparent;
+            Frame.CornerRadius = new CornerRadius(round ? 12 : 0);
+            FrameLine.IsVisible = round;
         }
 
         private void Show(IPage p)

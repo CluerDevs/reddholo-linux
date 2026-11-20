@@ -2,8 +2,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Reddholo.App.MainWindow"
         Title="reddholo" Icon="/holo.ico" Width="1280" Height="820" MinWidth="980" MinHeight="620"
-        Background="{DynamicResource Bg}" Foreground="{DynamicResource Text}" FontSize="14"
+        Background="Transparent" Foreground="{DynamicResource Text}" FontSize="14"
         WindowStartupLocation="CenterScreen">
+    <!-- Own dark caption bar. Windows keeps native resize/snap (extended client area); Linux has no decorations and
+         resizes through the edge grips at the bottom of this file. Corners round only when the compositor gives us transparency. -->
+    <Border x:Name="Frame" Background="{DynamicResource Bg}">
     <Grid ColumnDefinitions="228,*" RowDefinitions="56,*">
         <!-- Backdrop glows -->
         <Canvas Grid.ColumnSpan="2" Grid.RowSpan="2" IsHitTestVisible="False" ClipToBounds="True">
@@ -21,7 +24,7 @@
         <!-- Rail -->
         <Border Grid.RowSpan="2" Background="{DynamicResource Rail.99}" BorderBrush="{DynamicResource GlassLine}" BorderThickness="0,0,1,0" Padding="14,0,14,20">
             <DockPanel>
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10,14,0,24">
+                <StackPanel x:Name="Logo" DockPanel.Dock="Top" Orientation="Horizontal" Margin="10,14,0,24" Background="Transparent">
                     <Image Source="/holo.ico" Width="28" Height="28" />
                     <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="18" FontWeight="Bold">
                         <Run Text="REDD"/><Run Text="/" Foreground="{DynamicResource Accent}"/><Run Text="HOLO"/>
@@ -43,7 +46,37 @@
             </DockPanel>
         </Border>
 
-        <TextBlock x:Name="PageTitle" Grid.Column="1" Margin="32,10,0,0" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+        <Border x:Name="CaptionDrag" Grid.Column="1" Background="Transparent"/>
+        <TextBlock x:Name="PageTitle" Grid.Column="1" Margin="32,10,0,0" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" IsHitTestVisible="False"/>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+            <Button x:Name="WidgetButton" Classes="caption" ToolTip.Tip="Desktop widget" AutomationProperties.Name="Widget">
+                <Path Data="M1,1 H9 V6 H1 Z M3,8 H7" Stroke="{DynamicResource Muted}" StrokeThickness="1.2"/>
+            </Button>
+            <Button x:Name="MinButton" Classes="caption" AutomationProperties.Name="Minimize">
+                <Path Data="M0,5 H10" Stroke="{DynamicResource Muted}" StrokeThickness="1.2"/>
+            </Button>
+            <Button x:Name="MaxButton" Classes="caption" AutomationProperties.Name="Maximize">
+                <Path x:Name="MaxGlyph" Data="M0.5,0.5 H9.5 V9.5 H0.5 Z" Stroke="{DynamicResource Muted}" StrokeThickness="1.2"/>
+            </Button>
+            <Button x:Name="CloseButton" Classes="caption close" AutomationProperties.Name="Close">
+                <Path Data="M0,0 L10,10 M10,0 L0,10" Stroke="{DynamicResource Muted}" StrokeThickness="1.2"/>
+            </Button>
+        </StackPanel>
         <ContentControl x:Name="PageHost" Grid.Column="1" Grid.Row="1" Margin="32,4,32,0" Focusable="False"/>
+
+        <!-- Resize grips (Linux only; Windows resizes natively). Tag = WindowEdge name. -->
+        <Grid x:Name="Grips" Grid.ColumnSpan="2" Grid.RowSpan="2" ColumnDefinitions="8,*,8" RowDefinitions="8,*,8" IsVisible="False">
+            <Border Tag="NorthWest" Cursor="TopLeftCorner" Background="Transparent"/>
+            <Border Tag="North" Grid.Column="1" Cursor="TopSide" Background="Transparent"/>
+            <Border Tag="NorthEast" Grid.Column="2" Cursor="TopRightCorner" Background="Transparent"/>
+            <Border Tag="West" Grid.Row="1" Cursor="LeftSide" Background="Transparent"/>
+            <Border Tag="East" Grid.Row="1" Grid.Column="2" Cursor="RightSide" Background="Transparent"/>
+            <Border Tag="SouthWest" Grid.Row="2" Cursor="BottomLeftCorner" Background="Transparent"/>
+            <Border Tag="South" Grid.Row="2" Grid.Column="1" Cursor="BottomSide" Background="Transparent"/>
+            <Border Tag="SouthEast" Grid.Row="2" Grid.Column="2" Cursor="BottomRightCorner" Background="Transparent"/>
+        </Grid>
+        <!-- Hairline edge for the rounded frame; an overlay, so showing it never changes the layout. -->
+        <Border x:Name="FrameLine" Grid.ColumnSpan="2" Grid.RowSpan="2" BorderThickness="1" CornerRadius="12" BorderBrush="{DynamicResource GlassLine}" IsHitTestVisible="False" IsVisible="False"/>
     </Grid>
+    </Border>
 </Window>
