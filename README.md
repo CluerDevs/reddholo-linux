@@ -4,7 +4,7 @@ The Linux port of **reddholo**, a hardware monitor and PC clean-up tool. It is b
 one piece at a time.
 
 > **Status: early preview.** Released: `reddholo-cli`, a command-line tool that prints the machine's sensors.
-> In progress: the desktop app (Avalonia), which so far has the Sensors page. The full app (dashboard, GPU page,
+> In progress: the desktop app (Avalonia), which so far has the GPU and Sensors pages. The full app (dashboard,
 > clean-up) still runs on Windows only. Get that from [CluerDevs/reddholo](https://github.com/CluerDevs/reddholo).
 
 ## Download and run
@@ -70,7 +70,8 @@ dotnet publish source/Reddholo/Cli -c Release -r linux-x64 --self-contained -p:P
 dotnet run --project source/Reddholo/App -c Release
 ```
 
-Today it has the Sensors page and all six colour themes. It shares its settings file with the Windows app
+Today it has the GPU page (dials, power limit, fan curve, live history), the Sensors page and all six colour
+themes. Changing the power limit or fans needs root on Linux; reading works as a normal user. It shares its settings file with the Windows app
 (`~/.local/share/reddholo/settings.json` on Linux).
 
 ## Layout
@@ -88,7 +89,7 @@ Today it has the Sensors page and all six colour themes. It shares its settings 
 1. **Shared core:** sensors and GPU done. Still to come: apps, startup items, clean-up and drivers, each with a
    Linux version (apt/dnf/flatpak/snap, systemd/autostart, cache and journal clean-up).
 2. **Cross-platform app:** move the screens from WPF to Avalonia, so the same app opens on Windows and Linux.
-   Done: window, rail, themes, Sensors. Next: GPU page, Dashboard, desktop widget, custom window frame.
+   Done: window, rail, themes, Sensors, GPU. Next: Dashboard, desktop widget, custom window frame.
 3. **Packages:** AppImage for Linux, and a portable zip for Windows.
 4. **Fleet:** watch many machines from one place, over the local network and SSH, with alerts when something is
    out of normal. See [doc/fleet-plan.md](doc/fleet-plan.md).

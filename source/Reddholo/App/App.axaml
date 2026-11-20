@@ -56,6 +56,26 @@
             <Setter Property="Foreground" Value="{DynamicResource Text}" />
         </Style>
 
+        <!-- Main action (solid) and tinted standalone action; both also carry the ghost class for shape. -->
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="{DynamicResource Danger}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
+            <Setter Property="Foreground" Value="{DynamicResource OnDanger}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Padding" Value="22,0" />
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Danger.CC}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
+            <Setter Property="Foreground" Value="{DynamicResource OnDanger}" />
+        </Style>
+        <Style Selector="Button.accent">
+            <Setter Property="Background" Value="{DynamicResource AccentGlassFill}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent.99}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
+        </Style>
+
         <!-- Rail entries -->
         <Style Selector="ListBox.rail">
             <Setter Property="Background" Value="Transparent" />

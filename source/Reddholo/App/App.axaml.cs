@@ -15,14 +15,16 @@ namespace Reddholo.App
         public override void OnFrameworkInitializationCompleted()
         {
             Themes.LoadSaved(); // palette must exist before any window builds
-            // Linux sources (hwmon, /proc) are built into SensorHub; the GPU is added here because no GPU page exists yet.
+            // Linux sources (hwmon, /proc) are built into SensorHub; the GPU is added so the Sensors page lists it too.
             SensorHub.AddSource(new NvmlSensorSource());
             SensorHub.Post = a => Dispatcher.UIThread.Post(a, DispatcherPriority.Background);
+            GpuModel.Confirm = GpuPage.Confirm;
+            GpuPage.Model.Start(); // at launch, so fans left on a curve by a crash go back to automatic straight away
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = new MainWindow();
-                desktop.Exit += (_, _) => SensorHub.Shutdown();
+                desktop.Exit += (_, _) => { GpuPage.Model.Shutdown(); SensorHub.Shutdown(); };
             }
             base.OnFrameworkInitializationCompleted();
         }

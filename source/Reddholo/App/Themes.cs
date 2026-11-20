@@ -58,6 +58,13 @@ namespace Reddholo.App
             r["RailSelected"] = Gradient(new Point(0, 0), new Point(1, 0), (WithAlpha(accent, 0x38), 0), (WithAlpha(accent, 0x0A), 1));
             r["AccentText"] = new ImmutableSolidColorBrush(Lerp(accent, Colors.White, 0.7));
             r["OnDanger"] = new ImmutableSolidColorBrush(Lerp(danger, Colors.Black, 0.9));
+            // Fluent controls (sliders, focus) take their highlight from these.
+            r["SystemAccentColor"] = accent;
+            for (int i = 1; i <= 3; i++)
+            {
+                r["SystemAccentColorLight" + i] = Lerp(accent, Colors.White, 0.15 * i);
+                r["SystemAccentColorDark" + i] = Lerp(accent, Colors.Black, 0.15 * i);
+            }
 
             Current = t;
             if (save) Save();

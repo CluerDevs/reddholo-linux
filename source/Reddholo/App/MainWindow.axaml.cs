@@ -21,7 +21,7 @@ namespace Reddholo.App
 
     public partial class MainWindow : Window
     {
-        private readonly List<IPage> _pages = new List<IPage> { new SensorsPage() };
+        private readonly List<IPage> _pages = new List<IPage> { new GpuPage(), new SensorsPage() };
         private readonly Dictionary<string, Control> _views = new Dictionary<string, Control>();
 
         public MainWindow()
