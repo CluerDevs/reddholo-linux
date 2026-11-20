@@ -1,5 +1,6 @@
 using System;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
@@ -23,8 +24,10 @@ namespace Reddholo.App
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
+                desktop.ShutdownMode = ShutdownMode.OnMainWindowClose; // an open widget must not keep the app alive
                 desktop.MainWindow = new MainWindow();
-                desktop.Exit += (_, _) => { GpuPage.Model.Shutdown(); SensorHub.Shutdown(); };
+                Widget.WidgetHost.RestoreIfWasOpen();
+                desktop.Exit += (_, _) => { Widget.WidgetHost.Close(); GpuPage.Model.Shutdown(); SensorHub.Shutdown(); };
             }
             base.OnFrameworkInitializationCompleted();
         }

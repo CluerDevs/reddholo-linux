@@ -96,7 +96,7 @@ namespace Reddholo.App
             MinButton.Click += (_, _) => WindowState = WindowState.Minimized;
             MaxButton.Click += (_, _) => ToggleMax();
             CloseButton.Click += (_, _) => Close();
-            WidgetButton.IsVisible = false; // shown once the widget is wired in
+            WidgetButton.Click += (_, _) => Widget.WidgetHost.Toggle();
 
             PropertyChanged += (_, e) => { if (e.Property == WindowStateProperty || e.Property == ActualTransparencyLevelProperty) UpdateFrame(); };
             Opened += (_, _) => UpdateFrame();
