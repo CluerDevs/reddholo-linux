@@ -26,6 +26,7 @@ namespace Reddholo.App
         public string Icon => "M12,2 A3,3 0 0 1 15,5 V13.5 A5,5 0 1 1 9,13.5 V5 A3,3 0 0 1 12,2 Z M12,4 A1,1 0 0 0 11,5 V14.6 A3,3 0 1 0 13,14.6 V5 A1,1 0 0 0 12,4 Z";
         public int Order => 40;
         public Control CreateView() => new SensorsView();
+        public Control CreateTile() => DashboardView.SensorsTile();
 
         internal static string Fmt(double v, string unit)
         {

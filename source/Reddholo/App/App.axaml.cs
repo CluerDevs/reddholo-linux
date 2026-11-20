@@ -18,7 +18,7 @@ namespace Reddholo.App
             // Linux sources (hwmon, /proc) are built into SensorHub; the GPU is added so the Sensors page lists it too.
             SensorHub.AddSource(new NvmlSensorSource());
             SensorHub.Post = a => Dispatcher.UIThread.Post(a, DispatcherPriority.Background);
-            GpuModel.Confirm = Shell.Confirm;
+            GpuModel.Confirm = (t, m) => Shell.Confirm(t, m);
             GpuPage.Model.Start(); // at launch, so fans left on a curve by a crash go back to automatic straight away
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

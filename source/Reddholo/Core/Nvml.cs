@@ -64,6 +64,7 @@ namespace BcuHolo.Modules.Gpu
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int nvmlDeviceGetClockInfo(IntPtr dev, int type, out uint mhz);
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int nvmlDeviceGetMaxClockInfo(IntPtr dev, int type, out uint mhz);
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int nvmlDeviceGetMemoryInfo(IntPtr dev, out MemoryInfo mem);
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int nvmlSystemGetDriverVersion(byte[] version, uint length);
 
         public static string ErrorText(int code)
         {
@@ -105,6 +106,15 @@ namespace BcuHolo.Modules.Gpu
             int len = Array.IndexOf(buf, (byte)0);
             name = System.Text.Encoding.ASCII.GetString(buf, 0, len < 0 ? buf.Length : len);
             return h;
+        }
+
+        /// <summary>Driver version, e.g. "580.95.05"; needs Init first.</summary>
+        public static string DriverVersion()
+        {
+            var buf = new byte[80];
+            Ck("nvmlSystemGetDriverVersion", nvmlSystemGetDriverVersion(buf, (uint)buf.Length));
+            int len = Array.IndexOf(buf, (byte)0);
+            return System.Text.Encoding.ASCII.GetString(buf, 0, len < 0 ? buf.Length : len);
         }
 
         public static int Temp(IntPtr h) { Ck("nvmlDeviceGetTemperature", nvmlDeviceGetTemperature(h, 0, out var t)); return (int)t; }

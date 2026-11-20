@@ -20,6 +20,13 @@
             <Setter Property="BoxShadow" Value="0 8 32 0 #73000000" />
         </Style>
 
+        <!-- Dashboard tile: a bigger, rounder card. -->
+        <Style Selector="Border.tile">
+            <Setter Property="CornerRadius" Value="22" />
+            <Setter Property="Padding" Value="20,18" />
+            <Setter Property="MinHeight" Value="230" />
+        </Style>
+
         <Style Selector="TextBlock.caps">
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="SemiBold" />

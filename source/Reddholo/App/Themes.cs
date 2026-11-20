@@ -48,6 +48,8 @@ namespace Reddholo.App
             r["AccentSoft"] = r["Accent.1A"];
             r["DangerSoft"] = r["Danger.12"];
             r["PanelLine"] = r["Line.24"];
+            r["RowLine"] = r["Line.12"];
+            r["Track"] = r["Line.14"];
 
             Color accent = Color.Parse(t.Accent), line = Color.Parse(t.Line), danger = Color.Parse(t.Danger);
             // Glass: light catches the top-left edge, fades through the middle, picks up the accent bottom-right.
@@ -56,6 +58,7 @@ namespace Reddholo.App
             r["GlassFill"] = Gradient(new Point(0, 0), new Point(0, 1), (Color.FromArgb(0x1C, 0xFF, 0xFF, 0xFF), 0), (Color.FromArgb(0x07, 0xFF, 0xFF, 0xFF), 1));
             r["AccentGlassFill"] = Gradient(new Point(0, 0), new Point(0, 1), (WithAlpha(accent, 0x40), 0), (WithAlpha(accent, 0x1A), 1));
             r["RailSelected"] = Gradient(new Point(0, 0), new Point(1, 0), (WithAlpha(accent, 0x38), 0), (WithAlpha(accent, 0x0A), 1));
+            r["AccentViolet"] = Gradient(new Point(0, 1), new Point(1, 0), (accent, 0), (Color.Parse(t.Hex("Violet")), 1));
             r["AccentText"] = new ImmutableSolidColorBrush(Lerp(accent, Colors.White, 0.7));
             r["OnDanger"] = new ImmutableSolidColorBrush(Lerp(danger, Colors.Black, 0.9));
             // Fluent controls (sliders, focus) take their highlight from these.

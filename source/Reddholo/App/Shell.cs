@@ -31,7 +31,7 @@ namespace Reddholo.App
         public static Action<string, string> SetBadge = (_, _) => { };
 
         /// <summary>Modal yes/no over the main window. Closing the dialog counts as no.</summary>
-        public static async Task<bool> Confirm(string title, string message)
+        public static async Task<bool> Confirm(string title, string message, string okLabel = "Apply")
         {
             var owner = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
             if (owner == null) return false;
@@ -41,7 +41,7 @@ namespace Reddholo.App
                 WindowStartupLocation = WindowStartupLocation.CenterOwner, ShowInTaskbar = false,
             };
             Ui.Res(w, Window.BackgroundProperty, "Bg");
-            var ok = Ui.Button("Apply", "primary");
+            var ok = Ui.Button(okLabel, "primary");
             var cancel = Ui.Button("Cancel", "ghost", new Thickness(8, 0, 0, 0));
             ok.IsDefault = true; cancel.IsCancel = true;
             ok.Click += (_, _) => w.Close(true);

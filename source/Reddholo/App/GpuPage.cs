@@ -21,6 +21,7 @@ namespace Reddholo.App
         public string Icon => "M2,6 H20 A2,2 0 0 1 22,8 V16 A2,2 0 0 1 20,18 H4 V20 H2 Z M4,8 V16 H20 V8 Z M12,9 A3,3 0 1 1 12,15 A3,3 0 1 1 12,9 Z";
         public int Order => 35;
         public Control CreateView() => new GpuView(Model);
+        public Control CreateTile() => DashboardView.GpuControlTile();
     }
 
     internal sealed class GpuView : UserControl
