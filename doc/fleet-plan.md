@@ -22,7 +22,7 @@ Priority order (changed from the first draft): **1. see everything, 2. get told 
 
 **Not in v1**
 - Remote GPU fan/curve control (hardware-damage risk without the local crash guard).
-- Internet exposure. LAN / Tailscale only.
+- Internet exposure. LAN, WireGuard / L2TP VPN and SSH only.
 - Self-repair. Alerts go to a human; "fix it" stays a manual click (see `ait` below for bounded auto-repair later).
 
 ---
@@ -48,7 +48,7 @@ Priority order (changed from the first draft): **1. see everything, 2. get told 
                                                              └───────────────────────────────────────┘
 ```
 
-- **Agents dial out** to the hub: no inbound firewall rules on each machine, works across NAT/Tailscale, and a
+- **Agents dial out** to the hub: no inbound firewall rules on each machine, works across NAT and over the WireGuard / L2TP VPN, and a
   dropped stream means "offline" immediately.
 - **Agent-less probes run on the hub** for gear that can't run an agent.
 - The server runs an agent too, so it monitors itself.
@@ -127,7 +127,7 @@ Noise control (the part that makes people keep alerts on):
 
 ## 7. Security (remote admin with SYSTEM rights plus device credentials)
 
-1. Hub listens on LAN / Tailscale only.
+1. Hub listens on LAN, WireGuard / L2TP VPN and SSH only.
 2. Agent **enrollment** with a one-time code → client certificate → **mutual TLS**, hub certificate pinned.
 3. Commands typed + allowlisted; agent-side policy can refuse; append-only audit on hub and agent.
 4. Device credentials (SNMPv3, Redfish, NAS) stored encrypted on the hub (DPAPI on Windows / a key file with
@@ -182,7 +182,7 @@ Options (decision 5):
 2. **Hardware inventory**: list of device types and rough counts (PCs, Linux GPU hosts, switches/router make,
    UPS make, NAS make, servers with BMC). This picks the probers for Phase 1.
 3. **Where messages go**: Teams, email, phone push, Slack? Who receives critical at night?
-4. **Network**: Tailscale only, LAN only, or both?
+4. **Network**: LAN plus WireGuard / L2TP VPN, SSH for admin. Settled, local-first.
 5. **`ait`**: option A, B or C above.
 
 ## 12. Risks
