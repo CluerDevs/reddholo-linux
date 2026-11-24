@@ -367,8 +367,8 @@ namespace Reddholo.App.Widget
             menu.Items.Add(opacity);
 
             menu.Items.Add(new Separator());
-            menu.Items.Add(Check("Always on top", _s.OnTop, () => { _s.OnTop = true; ApplyWindowSettings(); }));
-            menu.Items.Add(Check("Not on top (stays behind other windows)", !_s.OnTop, () => { _s.OnTop = false; ApplyWindowSettings(); }));
+            menu.Items.Add(Check("Always on top", _s.OnTop, () => { _s.OnTop = !_s.OnTop; ApplyWindowSettings(); }));
+            menu.Items.Add(Check("Not on top (stays behind other windows)", !_s.OnTop, () => { _s.OnTop = !_s.OnTop; ApplyWindowSettings(); }));
             menu.Items.Add(Check("Lock position", _s.Locked, () => _s.Locked = !_s.Locked));
             // "Start with Windows" (a schtasks logon task) is not ported: the widget comes back with the app via "Open".
 
