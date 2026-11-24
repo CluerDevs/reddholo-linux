@@ -55,6 +55,7 @@ namespace BcuHolo.Modules.Sensors
                     bool input = fn.EndsWith("_input", StringComparison.Ordinal);
                     if (!input && !(fn.StartsWith("power", StringComparison.Ordinal) && fn.EndsWith("_average", StringComparison.Ordinal))) continue;
                     var stem = fn.Substring(0, fn.LastIndexOf('_'));
+                    if (!input && File.Exists(Path.Combine(hw, stem + "_input"))) continue; // both exist: same key twice
                     var kind = Kinds.FirstOrDefault(k => stem.StartsWith(k.prefix, StringComparison.Ordinal) && stem.Length > k.prefix.Length && char.IsDigit(stem[k.prefix.Length]));
                     if (kind.unit == null) continue;
                     if (!long.TryParse(Text(file), NumberStyles.Integer, CultureInfo.InvariantCulture, out var raw)) continue; // EIO etc.

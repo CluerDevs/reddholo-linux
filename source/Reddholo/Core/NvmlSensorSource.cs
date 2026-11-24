@@ -26,17 +26,23 @@ namespace BcuHolo.Modules.Gpu
                     _dev = GpuDevice.Open();
                 }
                 var g = _dev.Name;
-                list.Add(new SensorReading(Name, g, "GPU Core", _dev.Temp(), "°C"));
-                list.Add(new SensorReading(Name, g, "GPU Core", _dev.Load(), "%"));
-                list.Add(new SensorReading(Name, g, "GPU Package", _dev.PowerW(), "W"));
-                list.Add(new SensorReading(Name, g, "GPU Core", _dev.CoreMHz(), "MHz"));
-                var (used, total) = _dev.Vram();
-                list.Add(new SensorReading(Name, g, "GPU Memory Used", used / 1024.0, "GB"));
-                list.Add(new SensorReading(Name, g, "GPU Memory Total", total / 1024.0, "GB"));
-                for (int i = 0; i < _dev.FanCount; i++) list.Add(new SensorReading(Name, g, $"GPU Fan {i + 1}", _dev.Fan(i), "%"));
+                // one unsupported reading (e.g. power or fans on laptops) must not hide the rest: partial list
+                void Add(string n, Func<double> f, string u) { try { list.Add(new SensorReading(Name, g, n, f(), u)); } catch (NvmlException) { } }
+                Add("GPU Core", () => _dev.Temp(), "°C");
+                Add("GPU Core", () => _dev.Load(), "%");
+                Add("GPU Package", () => _dev.PowerW(), "W");
+                Add("GPU Core", () => _dev.CoreMHz(), "MHz");
+                try
+                {
+                    var (used, total) = _dev.Vram();
+                    list.Add(new SensorReading(Name, g, "GPU Memory Used", used / 1024.0, "GB"));
+                    list.Add(new SensorReading(Name, g, "GPU Memory Total", total / 1024.0, "GB"));
+                }
+                catch (NvmlException) { }
+                for (int i = 0; i < _dev.FanCount; i++) { int fan = i; Add($"GPU Fan {i + 1}", () => _dev.Fan(fan), "%"); }
             }
             catch (NvmlException ex) when (_dev == null) { _error = ex.Message; }
-            catch (NvmlException) { } // one unsupported reading (e.g. fans on laptops) must not hide the rest: partial list
+            catch (NvmlException) { }
             return list;
         }
 

@@ -257,9 +257,9 @@ namespace Reddholo.App
                 psi.Environment["SYSTEMD_COLORS"] = "0";
                 using var p = Process.Start(psi);
                 var err = p.StandardError.ReadToEndAsync();
-                var outp = p.StandardOutput.ReadToEnd();
-                if (!p.WaitForExit(timeoutMs)) { try { p.Kill(); } catch { } return (-1, "timed out"); }
-                return (p.ExitCode, p.ExitCode == 0 ? outp : err.Result + outp);
+                var outp = p.StandardOutput.ReadToEndAsync();
+                if (!p.WaitForExit(timeoutMs)) { try { p.Kill(true); } catch { } return (-1, "timed out"); }
+                return (p.ExitCode, p.ExitCode == 0 ? outp.Result : err.Result + outp.Result);
             }
             catch (Exception ex) { return (-1, ex.Message); }
         }

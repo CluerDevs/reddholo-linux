@@ -149,13 +149,16 @@ namespace Reddholo.App
             h.RamGb = (int)Math.Round(LinuxInfo.Memory().total / (1L << 30));
 
             // Machine-check errors in the kernel log are Linux's WHEA. Needs journal access (adm/systemd-journal group); -1 = can't tell.
-            h.HwErrors = CountLines("journalctl", "-k", "-q", "--no-pager", "--since", "-30d", "--grep", "Hardware Error|mce: \\[");
+            // -q hides the "not seeing system messages" hint, so probe first: a readable kernel journal has at least one line.
+            h.HwErrors = CountLines("journalctl", "-k", "-q", "-n", "1", "--no-pager") < 1 ? -1
+                       : CountLines("journalctl", "-k", "-q", "--no-pager", "--since", "-30d", "--grep", "Hardware Error|mce: \\[");
             // Kernel crashes leave dumps in pstore, or a timestamped folder from kdump in /var/crash
             // (the *.crash files there are apport's app crash reports, not kernel crashes).
             var since = DateTime.UtcNow.AddDays(-30);
-            int Count(IEnumerable<string> e) { try { return e.Count(f => File.GetLastWriteTimeUtc(f) > since); } catch (Exception) { return 0; } }
-            h.Crashes = new[] { "/var/lib/systemd/pstore", "/sys/fs/pstore" }.Where(Directory.Exists).Sum(d => Count(Directory.EnumerateFileSystemEntries(d)))
-                      + (Directory.Exists("/var/crash") ? Count(Directory.EnumerateDirectories("/var/crash")) : 0);
+            // Enumerate inside the try: the call itself throws on an unreadable dir (/sys/fs/pstore is 0750 root).
+            int Count(Func<IEnumerable<string>> e) { try { return e().Count(f => File.GetLastWriteTimeUtc(f) > since); } catch (Exception) { return 0; } }
+            h.Crashes = new[] { "/var/lib/systemd/pstore", "/sys/fs/pstore" }.Where(Directory.Exists).Sum(d => Count(() => Directory.EnumerateFileSystemEntries(d)))
+                      + (Directory.Exists("/var/crash") ? Count(() => Directory.EnumerateDirectories("/var/crash")) : 0);
             return h;
         }
 
@@ -181,12 +184,13 @@ namespace Reddholo.App
                 var psi = new ProcessStartInfo(exe) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
                 foreach (var a in args) psi.ArgumentList.Add(a);
                 using var p = Process.Start(psi);
-                int n = 0;
-                while (p.StandardOutput.ReadLine() != null) n++;
-                var err = p.StandardError.ReadToEnd();
-                if (!p.WaitForExit(10000)) { p.Kill(); return -1; }
-                // journalctl exits 1 when --grep matches nothing; an access problem shows on stderr instead.
-                return err.Contains("No journal files") || err.Contains("ermission") ? -1 : n;
+                var outTask = p.StandardOutput.ReadToEndAsync();
+                var errTask = p.StandardError.ReadToEndAsync();
+                if (!p.WaitForExit(10000)) { try { p.Kill(true); } catch (Exception) { } return -1; }
+                int n = outTask.Result.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length;
+                var err = errTask.Result;
+                // journalctl exits 1 with empty stderr when --grep matches nothing; any other failure prints to stderr.
+                return err.Contains("No journal files") || err.Contains("ermission") || (p.ExitCode != 0 && err.Trim() != "") ? -1 : n;
             }
             catch (Exception) { return -1; }
         }
@@ -268,15 +272,20 @@ namespace Reddholo.App
             _onSensors = UpdateCpuTemp;
             Ui.WhileShown(this, async on =>
             {
-                _timer.IsEnabled = on;
-                GpuModel.Want(on); // the poll reads the GPU model
-                if (on) SensorHub.Subscribe(_onSensors); else SensorHub.Unsubscribe(_onSensors);
-                if (!on) return;
-                _ = PollAsync();
-                if (_staticLoaded) return;
-                _staticLoaded = true;
-                LoadStorage();
-                await LoadHealthAsync();
+                try
+                {
+                    _timer.IsEnabled = on;
+                    GpuModel.Want(on); // the poll reads the GPU model
+                    if (on) SensorHub.Subscribe(_onSensors); else SensorHub.Unsubscribe(_onSensors);
+                    if (!on) return;
+                    _ = PollAsync();
+                    if (_staticLoaded) return;
+                    _staticLoaded = true;
+                    var health = LoadHealthAsync();
+                    LoadStorage(await Task.Run(LinuxInfo.Drives)); // statfs can hang on a dead network mount: keep it off the UI thread
+                    await health;
+                }
+                catch (Exception ex) { Trace.WriteLine("Dashboard load failed: " + ex); } // async void: an escape would crash the app
             });
         }
 
@@ -639,25 +648,28 @@ namespace Reddholo.App
 
         // ---------- one-off: storage and CPU health ----------
 
-        private void LoadStorage()
+        // df's Use%: root-reserved blocks (in TotalFreeSpace, not AvailableFreeSpace) count as neither used nor free.
+        private static double UsedFraction(DriveInfo d) =>
+            (double)(d.TotalSize - d.TotalFreeSpace) / (d.TotalSize - d.TotalFreeSpace + d.AvailableFreeSpace);
+
+        private void LoadStorage(List<DriveInfo> drives)
         {
-            var drives = LinuxInfo.Drives();
             var sys = drives.FirstOrDefault(d => d.Name == "/") ?? drives.FirstOrDefault();
             if (sys == null) { _storageCaps.Text = "STORAGE · no disks found"; return; }
-            double used = (double)(sys.TotalSize - sys.TotalFreeSpace) / sys.TotalSize;
+            double used = UsedFraction(sys);
             _sysRing.SweepAngle = 360 * used;
             _sysPct.Text = $"{used * 100:0}%";
             _sysRoot.Text = sys.Name + " used";
-            _sysFree.Text = DashboardPage.Size(sys.TotalFreeSpace);
+            _sysFree.Text = DashboardPage.Size(sys.AvailableFreeSpace);
             _sysOf.Text = $" free of {DashboardPage.Size(sys.TotalSize)}";
             _storageCaps.Text = $"STORAGE · {drives.Count} {(drives.Count == 1 ? "DISK" : "DISKS")}";
             Shell.SetBadge("apps", null);
 
             foreach (var d in drives.Where(d => d != sys))
             {
-                double f = (double)(d.TotalSize - d.TotalFreeSpace) / d.TotalSize;
+                double f = UsedFraction(d);
                 var head = new DockPanel();
-                var detail = Ui.Text($"{DashboardPage.Size(d.TotalFreeSpace)} free", 11, "Muted");
+                var detail = Ui.Text($"{DashboardPage.Size(d.AvailableFreeSpace)} free", 11, "Muted");
                 DockPanel.SetDock(detail, Dock.Right);
                 head.Children.Add(detail);
                 var title = Ui.Text(d.Name, 12, weight: FontWeight.SemiBold);
@@ -707,7 +719,7 @@ namespace Reddholo.App
                 Ui.Res(_healthIcon, PathIcon.ForegroundProperty, "Muted");
                 _healthNote.Text = "This CPU is in Intel's 13th/14th-gen voltage issue, but its microcode revision is hidden (virtual machine?). Check on the host.";
             }
-            else if (h.Microcode >= 0x129)
+            else if (h.Microcode >= 0x12B)
             {
                 Chip("Protected", green);
                 _healthNote.Text = "Microcode has Intel's voltage fix. Watching for new errors.";
@@ -717,7 +729,7 @@ namespace Reddholo.App
             else
             {
                 Chip("Needs BIOS update", warn);
-                _healthNote.Text = "Microcode is older than 0x129: the CPU can keep degrading. Update the BIOS (or the intel-microcode package).";
+                _healthNote.Text = "Microcode is older than 0x12B: the CPU can keep degrading. Update the BIOS (or the intel-microcode package).";
                 _healthIcon.Data = Geometry.Parse(Warn);
                 Ui.Res(_healthIcon, PathIcon.ForegroundProperty, warn);
                 Ui.Res(_hMicro, TextBlock.ForegroundProperty, warn);
@@ -726,7 +738,7 @@ namespace Reddholo.App
             Ui.Res(_hCrash, TextBlock.ForegroundProperty, h.Crashes > 0 ? warn : green);
 
             // The pill must be able to go amber: any hardware error, crash, or unpatched Raptor Lake counts.
-            int issues = (h.RaptorLake && h.Microcode != 0 && h.Microcode < 0x129 ? 1 : 0) + (h.HwErrors > 0 ? 1 : 0) + (h.Crashes > 0 ? 1 : 0);
+            int issues = (h.RaptorLake && h.Microcode != 0 && h.Microcode < 0x12B ? 1 : 0) + (h.HwErrors > 0 ? 1 : 0) + (h.Crashes > 0 ? 1 : 0);
             _statusText.Text = issues == 0 ? "● System healthy"
                 : h.Crashes > 0 && issues == 1 ? $"● {h.Crashes} kernel crash(es) in 30 days"
                 : $"● {issues} things need attention";

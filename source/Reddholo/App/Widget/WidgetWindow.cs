@@ -41,7 +41,7 @@ namespace Reddholo.App.Widget
 
         public void Save()
         {
-            try { Directory.CreateDirectory(Path.GetDirectoryName(FilePath)); File.WriteAllText(FilePath, JsonSerializer.Serialize(this)); }
+            try { Directory.CreateDirectory(Path.GetDirectoryName(FilePath)); var tmp = FilePath + ".tmp"; File.WriteAllText(tmp, JsonSerializer.Serialize(this)); File.Move(tmp, FilePath, overwrite: true); }
             catch (Exception) { /* settings are a convenience; the widget still works */ }
         }
     }

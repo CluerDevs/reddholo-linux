@@ -245,14 +245,16 @@ namespace Reddholo.App
                 try
                 {
                     string fw = Run("fwupdmgr", 120000, "get-updates", "--json");
-                    if (fw == null) notes.Add("fwupd not installed (sudo apt install fwupd)");
+                    if (fw == null) notes.Add(File.Exists("/usr/bin/fwupdmgr") ? "fwupdmgr did not respond" : "fwupd not installed (sudo apt install fwupd)");
                     else items.AddRange(ParseFwupd(fw));
-                    string ud = Run("ubuntu-drivers", 60000, "list");
+                    // "list" prints every applicable driver; only the recommended one from "devices" is a suggestion.
+                    string ud = Run("ubuntu-drivers", 60000, "devices");
                     if (ud != null)
-                        foreach (var line in ud.Split('\n'))
+                        foreach (var line in ud.Split('\n').Where(l => l.TrimStart().StartsWith("driver", StringComparison.Ordinal) && l.Contains("recommended")))
                         {
-                            string pkg = line.Split(',')[0].Trim();
+                            string pkg = line.Split(':', 2)[1].Split(" - ")[0].Trim();
                             if (pkg == "" || pkg.Contains(' ') || Installed(pkg)) continue;
+                            if (pkg.StartsWith("nvidia-driver-", StringComparison.Ordinal) && SafeDirs("/var/lib/dpkg/info", "nvidia-driver-*.list").Length > 0) continue; // another series installed: not an update
                             items.Add(new UpdateItem { Title = pkg, Detail = "Driver package available (ubuntu-drivers)", Command = "sudo apt install " + pkg });
                         }
                     else if (File.Exists("/etc/lsb-release")) notes.Add("ubuntu-drivers not installed");

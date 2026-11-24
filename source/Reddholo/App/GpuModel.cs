@@ -124,6 +124,7 @@ namespace Reddholo.App
         }
 
         private int _cur = -1, _lastSent = -1, _fails, _tick;
+        private bool _wrote; // a fan write may still be in effect (SetFan succeeded, or a stale marker), not yet restored
         private double _anchor;
 
         public GpuModel() => Load_();
@@ -156,6 +157,7 @@ namespace Reddholo.App
                 if (SavedWasActive) Status = "Saved curve — Apply to activate";
                 if (File.Exists(EngagedMarker))
                 {
+                    _wrote = true; // the crashed session may have written: keep the marker until a restore succeeds
                     var err = RestoreAll();
                     Warning = err == null
                         ? "reddholo closed unexpectedly while the fan curve was active. Fans were handed back to automatic control."
@@ -190,6 +192,7 @@ namespace Reddholo.App
         {
             if (_shutDown) return;
             if (_tick++ % 3 == 0 && _viewOpen) Afterburner = IsAfterburnerRunning();
+            if (!CurveActive && _wrote && _dev != null) RestoreAll(); // an earlier restore failed: keep retrying until fans are automatic
             if (!CurveActive && _changed == null && Volatile.Read(ref _demand) == 0) return; // nobody reading: skip NVML
             if (_dev == null) { RaiseChanged(); return; }
 
@@ -219,11 +222,12 @@ namespace Reddholo.App
                 if (!bad)
                 {
                     try { Step(); }
-                    catch (NvmlException ex)
+                    // A driver without the *_v2 fan exports throws EntryPointNotFoundException: treat it as "not supported".
+                    catch (Exception ex) when (ex is NvmlException { Code: 3 or 4 } or EntryPointNotFoundException)
                     {
-                        if (ex.Code == 3 || ex.Code == 4) { Fallback("Fan control refused: " + ex.Message + ". Restored automatic fan control."); RaiseChanged(); return; }
-                        bad = true; err = ex.Message;
+                        Fallback("Fan control refused: " + ex.Message + ". Restored automatic fan control."); RaiseChanged(); return;
                     }
+                    catch (NvmlException ex) { bad = true; err = ex.Message; }
                 }
                 if (bad)
                 {
@@ -266,7 +270,7 @@ namespace Reddholo.App
             }
             if (_cur != _lastSent || _tick % 10 == 0)
             {
-                for (int i = 0; i < _dev.FanCount; i++) _dev.SetFan(i, _cur);
+                for (int i = 0; i < _dev.FanCount; i++) { _dev.SetFan(i, _cur); _wrote = true; }
                 _lastSent = _cur;
             }
         }
@@ -285,10 +289,11 @@ namespace Reddholo.App
 
         private void Fallback(string warning)
         {
-            RestoreAll();
+            var e = RestoreAll();
             CurveActive = false;
             FixedPct = -1;
-            Warning = warning;
+            // Only a failed restore after a successful write leaves fans manual; TickCore keeps retrying while _wrote.
+            Warning = e != null && _wrote ? warning.Replace("Restored automatic fan control.", "Restoring automatic control FAILED: " + e) : warning;
             Persist();
         }
 
@@ -300,10 +305,11 @@ namespace Reddholo.App
             for (int i = 0; i < _dev.FanCount; i++)
             {
                 try { _dev.SetDefaultFan(i); }
-                catch (NvmlException ex) { first ??= ex.Message; }
+                catch (Exception ex) when (ex is NvmlException or EntryPointNotFoundException) { first ??= ex.Message; }
             }
             _cur = _lastSent = -1;
-            if (first == null) TryDeleteMarker();
+            if (first == null) _wrote = false;
+            if (!_wrote) TryDeleteMarker(); // nothing we wrote is still in effect (e.g. non-root: every SetFan refused)
             return first;
         }
 

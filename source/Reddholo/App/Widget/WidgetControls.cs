@@ -574,16 +574,13 @@ namespace Reddholo.App.Widget
             _value.Set(ok ? text : null, valueHue == "Danger" ? "Danger" : "Text");
             double f = ok ? Math.Clamp(value / _max, 0, 1) : 0;
 
-            if (valueHue != _tickKey)
-            {
-                _tickKey = valueHue;
-                Array.Clear(_lit); // lit ticks get re-pointed at the new colour below
-            }
+            bool force = valueHue != _tickKey; // repaint every tick so lit ones take the new colour
+            _tickKey = valueHue;
             int n = _ticks.Length - 1;
             for (int i = 0; i <= n; i++)
             {
                 bool lit = ok && f > 0 && (double)i / n <= f + 1e-9;
-                if (lit == _lit[i]) continue;
+                if (!force && lit == _lit[i]) continue;
                 _lit[i] = lit;
                 Ui.Res(_ticks[i], Shape.StrokeProperty, lit ? valueHue : _major[i] ? "Line.66" : "Line.33");
             }

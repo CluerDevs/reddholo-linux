@@ -366,19 +366,20 @@ namespace Reddholo.App.Widget
             {
                 try
                 {
-                    HwErrBoot = JournalLines("-b");
-                    HwErr30d = HwErrBoot < 0 ? -1 : JournalLines("--since", "-30d");
+                    // -q hides the access hint, so no kernel line at all this boot means no journal access.
+                    HwErrBoot = JournalLines(false, "-b", "-n", "1") < 1 ? -1 : JournalLines(true, "-b");
+                    HwErr30d = HwErrBoot < 0 ? -1 : JournalLines(true, "--since", "-30d");
                 }
                 finally { _errRunning = 0; }
             });
         }
 
-        private static int JournalLines(params string[] range)
+        private static int JournalLines(bool grep, params string[] range)
         {
             try
             {
                 var psi = new ProcessStartInfo("journalctl") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
-                foreach (var a in new[] { "-k", "-q", "--no-pager" }.Concat(range).Concat(new[] { "--grep", "Hardware Error|mce: \\[" })) psi.ArgumentList.Add(a);
+                foreach (var a in new[] { "-k", "-q", "--no-pager" }.Concat(range).Concat(grep ? new[] { "--grep", "Hardware Error|mce: \\[" } : Array.Empty<string>())) psi.ArgumentList.Add(a);
                 using var p = Process.Start(psi);
                 var err = p.StandardError.ReadToEndAsync();
                 int n = 0;

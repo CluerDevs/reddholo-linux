@@ -6,7 +6,7 @@
         WindowStartupLocation="CenterScreen">
     <!-- Own dark caption bar. Windows keeps native resize/snap (extended client area); Linux has no decorations and
          resizes through the edge grips at the bottom of this file. Corners round only when the compositor gives us transparency. -->
-    <Border x:Name="Frame" Background="{DynamicResource Bg}">
+    <Border x:Name="Frame" ClipToBounds="True" Background="{DynamicResource Bg}">
     <Grid ColumnDefinitions="228,*" RowDefinitions="56,*">
         <!-- Backdrop glows -->
         <Canvas Grid.ColumnSpan="2" Grid.RowSpan="2" IsHitTestVisible="False" ClipToBounds="True">

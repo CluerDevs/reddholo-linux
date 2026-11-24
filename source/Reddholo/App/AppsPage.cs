@@ -100,7 +100,7 @@ namespace Reddholo.App
                 foreach (var line in Lines(r.Out))
                 {
                     var f = line.Split('\t');
-                    if (f.Length < 5 || !f[0].StartsWith("ii", StringComparison.Ordinal)) continue; // skip removed-but-configured
+                    if (f.Length < 5 || f[0].Length < 2 || f[0][1] != 'i') continue; // installed only ("ii", or "hi" when held)
                     string name = f[1].Split(':')[0];
                     long.TryParse(f[3], out var kb);
                     all.Add(new Pkg { Source = "apt", Id = f[1], Name = name, Version = f[2], SizeKb = kb, Summary = f[4],
@@ -113,7 +113,7 @@ namespace Reddholo.App
                 var r = Run("rpm", new[] { "-qa", "--qf", "%{NAME}\t%{VERSION}-%{RELEASE}\t%{SIZE}\t%{SUMMARY}\n" }, 60000);
                 if (r.Code != 0) errors.Add("rpm: " + r.Err.Trim());
                 // shortcut: user-installed comes from dnf only; on zypper/other rpm systems all packages count as system.
-                var user = new HashSet<string>(Has("dnf") ? Lines(Run("dnf", new[] { "repoquery", "--userinstalled", "--qf", "%{name}\n" }, 120000).Out) : new string[0]);
+                var user = new HashSet<string>(Has("dnf") ? Lines(Run("dnf", new[] { "repoquery", "--disablerepo=*", "--userinstalled", "--qf", "%{name}\n" }, 120000).Out) : new string[0]);
                 foreach (var line in Lines(r.Out))
                 {
                     var f = line.Split('\t');
@@ -442,6 +442,7 @@ namespace Reddholo.App
             {
                 msg.Add($"{p.Source}: " + string.Join(", ", p.Ids));
                 if (p.Extra.Count > 0) msg.Add("  also removed, they depend on it: " + string.Join(", ", p.Extra));
+                if (p.Source == "rpm") msg.Add("  dnf also removes every package that depends on these, plus dependencies nothing else needs");
                 msg.Add("  $ " + string.Join(" ", p.Cmd));
             }
             if (bad.Count > 0) msg.Add("Skipped, can't remove here: " + string.Join(", ", bad.SelectMany(p => p.Ids)));

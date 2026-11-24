@@ -52,7 +52,7 @@ namespace Reddholo.App
             body.Children.Add(Ui.Text(title, 18, weight: FontWeight.Bold));
             var msg = Ui.Text(message, 14, "Muted");
             msg.Margin = new Thickness(0, 10, 0, 0);
-            body.Children.Add(msg);
+            body.Children.Add(new ScrollViewer { Content = msg, MaxHeight = 400 }); // long lists must not push the buttons off screen
             body.Children.Add(buttons);
             w.Content = body;
             return await w.ShowDialog<bool>(owner);
