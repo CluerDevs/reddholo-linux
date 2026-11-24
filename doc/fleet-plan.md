@@ -179,7 +179,7 @@ Options (decision 5):
 
 ## 11. Decisions needed before Phase 0
 
-1. **Hub server**: which machine, Windows or Linux? (The console is WPF so it needs Windows today.)
+1. **Hub server**: **Ultron** (decided 2026-11-24; not set up yet). Still open: Windows or Linux on it. (The console is WPF so it needs Windows today.)
 2. **Hardware inventory**: list of device types and rough counts (PCs, Linux GPU hosts, switches/router make,
    UPS make, NAS make, servers with BMC). This picks the probers for Phase 1.
 3. **Where messages go**: Teams, email, phone push, Slack? Who receives critical at night?
