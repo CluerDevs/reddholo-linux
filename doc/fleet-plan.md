@@ -51,6 +51,7 @@ Priority order (changed from the first draft): **1. see everything, 2. get told 
 - **Agents dial out** to the hub: no inbound firewall rules on each machine, works across NAT and over the WireGuard / L2TP VPN, and a
   dropped stream means "offline" immediately.
 - **Agent-less probes run on the hub** for gear that can't run an agent.
+- **Machines that already run Tailscale are just devices.** reddholo sees and monitors them like any other box: their agent dials the hub over the LAN or WireGuard / L2TP, and probes use their LAN or VPN address. The agent may report a `tailscale0` interface in inventory as plain data. Nothing in reddholo uses Tailscale: no client, API, tsnet library, MagicDNS or 100.x addressing.
 - The server runs an agent too, so it monitors itself.
 
 ---
