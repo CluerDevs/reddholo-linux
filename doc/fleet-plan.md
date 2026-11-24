@@ -1,8 +1,8 @@
 # reddholo Fleet: monitor the whole hardware stack, alert on abnormal, manage centrally (plan / handoff)
 
-**One line:** a central **hub** on one server collects readings from every device (agents on computers,
+**One line:** a central **hub** on pve1 collects readings from every device (agents on computers,
 agent-less probes for network/power/storage gear), learns what "normal" looks like per device and metric, and
-**sends a message** when something drifts out of normal. **reddholo on the server** is the console for the whole
+**sends a message** when something drifts out of normal. **reddholo on a Windows PC** is the console for the whole
 fleet and, later, the place to run management actions (uninstall, cleanup, startup) on the PCs.
 
 Status: plan only. Nothing here is built yet. Repo `CluerDevs/reddholo`, branch `reddholo`.
@@ -41,9 +41,9 @@ Priority order (changed from the first draft): **1. see everything, 2. get told 
  │  - management jobs   │                                    │  - alert router → Teams/email/push    │
  └──────────────────────┘                                    │  - jobs + audit                       │
                                                              └──────────────────┬───────────────────┘
-                                                                                │ localhost gRPC
+                                                                                │ gRPC (LAN/VPN)
                                                              ┌──────────────────▼───────────────────┐
-                                                             │ reddholo console (WPF, on the server) │
+                                                             │ reddholo console (WPF, a Windows PC)  │
                                                              │  Fleet page, alerts, per-device pages │
                                                              └───────────────────────────────────────┘
 ```
@@ -52,7 +52,7 @@ Priority order (changed from the first draft): **1. see everything, 2. get told 
   dropped stream means "offline" immediately.
 - **Agent-less probes run on the hub** for gear that can't run an agent.
 - **Machines that already run Tailscale are just devices.** reddholo sees and monitors them like any other box: their agent dials the hub over the LAN or WireGuard / L2TP, and probes use their LAN or VPN address. The agent may report a `tailscale0` interface in inventory as plain data. Nothing in reddholo uses Tailscale: no client, API, tsnet library, MagicDNS or 100.x addressing.
-- The server runs an agent too, so it monitors itself.
+- The hub runs on pve1 (in an LXC container); pve1 and the container run agents too, so the hub monitors itself.
 
 ---
 
@@ -179,7 +179,7 @@ Options (decision 5):
 
 ## 11. Decisions needed before Phase 0
 
-1. **Hub server**: **Ultron** (decided 2026-11-24; not set up yet). Still open: Windows or Linux on it. (The console is WPF so it needs Windows today.)
+1. **Hub server**: **pve1** (Proxmox, Linux), decided 2026-11-24, to take the processing off the desktops. Run the hub in its own LXC container on pve1, not on the Proxmox host itself, so a hub update can't affect the hypervisor. The WPF console runs on Windows PCs and connects to the hub over the LAN / VPN.
 2. **Hardware inventory**: list of device types and rough counts (PCs, Linux GPU hosts, switches/router make,
    UPS make, NAS make, servers with BMC). This picks the probers for Phase 1.
 3. **Where messages go**: Teams, email, phone push, Slack? Who receives critical at night?
